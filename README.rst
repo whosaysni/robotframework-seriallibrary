@@ -1,5 +1,6 @@
-==================================
-Serial Library for Robot Framework
-==================================
+====================================
+SerialLibrary for Robot Framework
+====================================
 
-Serial Library is a test library for Robot Framework.
+This is a serial port test library for Robot Framework.
+
