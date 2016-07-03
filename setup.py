@@ -24,7 +24,7 @@ execfile(join(CURDIR, 'src', 'SerialLibrary', 'version.py'))
 with open(join(CURDIR, 'README.rst')) as readme:
     README = readme.read()
 CLASSIFIERS = """
-Development Status :: 3 - Alpha
+Development Status :: 2 - Pre-Alpha
 License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
 Programming Language :: Python
