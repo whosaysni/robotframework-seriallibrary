@@ -149,10 +149,12 @@ class SerialLibrary:
         Values can be in any types and are converted into 
         appropreate type.
         """
+        prev_value = OrderedDict(self._defaults)
         for key, value in params.items():
             if key in self._defaults:
                 value_type = type(self._defaults.get(key))
                 self._defaults[key] = value_type(value)
+        return prev_value
         
     def reset_default_parameters(self):
         """
@@ -182,12 +184,16 @@ class SerialLibrary:
         """
         Fails if given regexp does not match current port locator.
 
-        Search is case-insensitive.
+        If current port is None, it will only match to empty sring.
+        Matching is case-insensitive.
         """
+        current_port_locator = self._current_port_locator
+        if current_port_locator is None:
+            current_port_locator = ''
         regexp = re.compile(port_locator_regexp, re.I)
         asserts.assert_not_none(
-            regexp.search(self._current_port_locator),
-            'Port does not match.')
+            regexp.match(current_port_locator),
+            'Port does not match.', values=False)
 
     def add_port(self, port_locator, open=True, make_current=False, **kwargs):
         """
@@ -206,8 +212,8 @@ class SerialLibrary:
 
         Returns created port instance.
         """
-        if port_locator in [None, '_']:
-            asserts.fail('Invalid port locaror.')
+        if port_locator in [None, '', '_']:
+            asserts.fail('Invalid port locator.')
         elif port_locator in self._ports:
             asserts.fail('Port already exists.')
         serial_kw = dict(
