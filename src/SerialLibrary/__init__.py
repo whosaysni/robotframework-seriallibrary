@@ -36,7 +36,7 @@ class SerialLibrary:
     """Serial Library."""
 
     ROBOT_LIBRARY_SCOPE = 'GLOBAL'
-    def __init__(self, port_locator=None, encoding='hex', **kwargs):
+    def __init__(self, port_locator=None, encoding='hexlify', **kwargs):
         """
         SerialLibrary can be imported with various arguments.
 
@@ -136,7 +136,7 @@ class SerialLibrary:
         Returns list of com ports matching the pattern, if exists.
         """
         found = list(grep(regexp))
-        asserts.assert_true(found, 'Matching port does not exist.')
+        asserts.assert_true(len(found)>0, 'Matching port does not exist.')
         return found
 
     def set_default_parameters(self, params):
@@ -290,6 +290,18 @@ class SerialLibrary:
         port = self._port(port_locator)
         if port.is_open:
             port.close()
+
+    def port_should_be_open(self, port_locator=None):
+        """
+        Fails if specified port is closed.
+        """
+        asserts.assert_true(self._port(port_locator).is_open)
+
+    def port_should_be_closed(self, port_locator=None):
+        """
+        Fails if specified port is open.
+        """
+        asserts.assert_false(self._port(port_locator).is_open)
 
     def switch_port(self, port_locator):
         """
