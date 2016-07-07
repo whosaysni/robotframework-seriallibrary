@@ -27,7 +27,7 @@ with open(join(CURDIR, 'README.rst')) as readme:
     README = readme.read()
 
 CLASSIFIERS = """
-Development Status :: 2 - Alpha
+Development Status :: 2 - Pre-Alpha
 License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
 Programming Language :: Python
@@ -49,6 +49,5 @@ setup(
     classifiers=CLASSIFIERS.splitlines(),
     package_dir={'': 'src'},
     packages=['SerialLibrary'],
-    requires = dict(
-        install_requires=['robotframework', 'pyserial'])
+    install_requires=['robotframework', 'pyserial'],
 )
