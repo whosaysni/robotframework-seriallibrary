@@ -4,40 +4,47 @@ from collections import OrderedDict
 from serial import Serial, SerialBase, serial_for_url
 from serial.serialutil import LF
 from serial.tools.list_ports import comports, grep
-from serial.tools.hexlify_codec import getregentry as hexlify_regentry
+from serial.tools import hexlify_codec
 
 from robot.api import logger
-from robot.utils import asserts
+from robot.utils import asserts, is_truthy, is_string
 from robot.utils.encoding import system_encode, system_decode
 from robot.utils.unic import unic
 
+from version import VERSION as __version__
+
+
 # add hexlify to codecs
-codecs.register(lambda c: hexlify_regentry() if c == 'hexlify' else None)
+def hexlify_decode_plus(data, errors='strict'):
+    udata, length = hexlify_codec.hex_decode(data, errors)
+    return (udata.rstrip(), length)
 
+hexlify_codec_plus = codecs.CodecInfo(
+    name='hexlify',
+    encode=hexlify_codec.hex_encode,
+    decode=hexlify_decode_plus,
+    incrementalencoder=hexlify_codec.IncrementalEncoder,
+    incrementaldecoder=hexlify_codec.IncrementalDecoder,
+    streamwriter=hexlify_codec.StreamWriter,
+    streamreader=hexlify_codec.StreamReader)
 
-def _default_kwargs_items():
-    _sb_obj = SerialBase()
-    return (
-        (key, getattr(_sb_obj, key))
-        for key in (
-                'baudrate',
-                'bytesize',
-                'parity',
-                'stopbits',
-                'timeout',
-                'write_timeout',
-                'xonxoff',
-                'rtscts',
-                'dsrdtr',
-                'inter_byte_timeout'))
+codecs.register(lambda c: hexlify_codec_plus if c == 'hexlify' else None)
+
+DEFAULT_SETTINGS = SerialBase(
+    timeout=1.0, write_timeout=1.0, inter_byte_timeout=0.0).get_settings()
 
 
 class SerialLibrary:
     """Serial Library."""
 
     ROBOT_LIBRARY_SCOPE = 'GLOBAL'
+    ROBOT_LIBRARY_VERSION = __version__
+    
     def __init__(self, port_locator=None, encoding='hexlify', **kwargs):
-        """
+        """\
+        SerialLibrary
+        ==============
+
         SerialLibrary can be imported with various arguments.
 
         Those all arguments correspond to parameters of Serial' constructor.
@@ -45,11 +52,18 @@ class SerialLibrary:
         as current port.
         `encoding` specifies default encoding to interpret bytes/string between
         serial device I/O and keyword argument/return values.
+
+        Default Parameters
+        -------------------
+        
+        Default parameter values except timeouts are set as same as SerialBase.
+        Default value or timeout and writer_timeout are set to 0.1.
+
         """
         args = [port_locator]
         self._encoding = encoding
         self._ports = OrderedDict()
-        self._defaults = dict(_default_kwargs_items())
+        self._defaults = dict(DEFAULT_SETTINGS)
         self.set_default_parameters(kwargs)
         self._current_port_locator = None
         if port_locator is not None:
@@ -62,13 +76,13 @@ class SerialLibrary:
 
         If encoding is not specified, instance's default encoding will be used.
         """
-        return encode(ustring, encoding or self._encoding, 'ignore')
+        return ustring.encode(encoding or self._encoding, 'ignore')
 
     def _decode(self, bstring, encoding=None):
         """
         Decode raw bytes to (unicode) string.
         """
-        return decode(bstring, encoding or self._encoding, 'replace')
+        return bstring.decode(encoding or self._encoding, 'replace')
 
     def _port(self, port_locator=None, fail=True):
         """
@@ -82,7 +96,7 @@ class SerialLibrary:
         if port_locator in [None, '_']:
             port_locator = self._current_port_locator
         port = self._ports.get(port_locator, None)
-        if port is None and fail is True:
+        if port is None and is_truthy(fail) is True:
             asserts.fail('No such port.')
         return port
 
@@ -163,7 +177,7 @@ class SerialLibrary:
         This keyword does not directly affect those exisitng ports added
         so far.
         """
-        self._defaults = dict(_default_kwargs_items())
+        self._defaults = dict(DEFAULT_SETTINGS)
 
     def get_current_port_locator(self):
         """
@@ -200,7 +214,7 @@ class SerialLibrary:
         Adds new port with specified locator.
 
         port_locator may be in (traditional) port name or url format.
-        If `open` has truth value, the port is opened immediately.
+        If `open` has false value, the port is closed immediately.
         Parameters given in kwargs will override those library defaults
         initialized on import.
         If make_current has truth value, the opened port is set to current
@@ -217,17 +231,17 @@ class SerialLibrary:
         elif port_locator in self._ports:
             asserts.fail('Port already exists.')
         serial_kw = dict(
-            (key, kwargs.get(key, self._defaults.get(key)))
-            for key in self._defaults)
+            (k, type(v)(kwargs.get(k, v)))
+            for k, v in self._defaults.items())
         # try url first, then port name
         try:
-            port = serial_for_url(port_locator, **kwargs)
+            port = serial_for_url(port_locator, **serial_kw)
         except (AttributeError, ValueError) as exc:
-            port = Serial(port_locator, **kwargs)
+            port = Serial(port_locator, **serial_kw)
         asserts.assert_not_none(port, 'Port initialization failed.')
         self._ports[port_locator] = port
-        if open and not port.is_open:
-            port.open()
+        if port.is_open and is_truthy(open) == False:
+            port.close()
         if self._current_port_locator is None or make_current:
             self._current_port_locator = port_locator
         return port
@@ -301,13 +315,19 @@ class SerialLibrary:
         """
         Fails if specified port is closed.
         """
-        asserts.assert_true(self._port(port_locator).is_open)
+        asserts.assert_true(
+            self._port(port_locator).is_open,
+            'Port is closed.'
+        )
 
     def port_should_be_closed(self, port_locator=None):
         """
         Fails if specified port is open.
         """
-        asserts.assert_false(self._port(port_locator).is_open)
+        asserts.assert_false(
+            self._port(port_locator).is_open,
+            'Port is open.'
+        )
 
     def switch_port(self, port_locator):
         """
@@ -353,7 +373,7 @@ class SerialLibrary:
         port = self._port(port_locator, fail=True)
         prev_value = getattr(port, param_name)
         param_type = type(self._defaults.get(param_name))
-        setattr(port, param_name, type(value))
+        setattr(port, param_name, param_type(value))
         return prev_value
 
     def read_all_data(self, encoding=None, port_locator=None):
@@ -363,13 +383,20 @@ class SerialLibrary:
         If `encoding` is not given, default encoding is used.
         """
         return self._decode(self._port(port_locator).read_all(), encoding)
-      
-    def read_until_terminator(self, terminator=LF, size=None, encoding=None, port_locator=None):
+
+    def read_until(self, terminator=LF, size=None, encoding=None, port_locator=None):
         """
         Read until a termination sequence is found, size exceeded or timeout.
 
         If `encoding` is not given, default encoding is used.
+        Note that encoding affects terminator too, so if you want to use
+        character 'X' as terminator and encoding=hexlify (default), you should
+        call this keyword as Read Until terminator=58.
         """
+        if size is not None:
+            size = float(size)
+        if terminator != LF:
+            terminator = self._encode(terminator)
         return self._decode(
             self._port(port_locator).read_until(terminator=terminator, size=size),
             encoding)
@@ -379,35 +406,37 @@ class SerialLibrary:
         Fails if port input buffer does not contain data.
         Fails if the port is closed.
         """
-        asserts.assrt_true(
-            self._port(port_locator).in_waiting(),
-            'Port does not have in-waiting data.')
+        asserts.assert_true(
+            self._port(port_locator).in_waiting,
+            'Port has no in-waiting data.')
 
     def port_should_not_have_unread_bytes(self, port_locator=None):
         """
         Fails if port input buffer contains data.
         Fails if the port is closed.
         """
-        asserts.assrt_false(
-            self._port(port_locator).in_waiting(),
+        asserts.assert_false(
+            self._port(port_locator).in_waiting,
             'Port has in-waiting data.')
 
     def port_should_have_unsent_bytes(self, port_locator=None):
         """
         Fails if port output buffer does not contain data.
-        Fails if the port is closed.
+        Also fails if the port is closed.
+        Not that if platform does not support out_waiting, this 
+        keyword will fail.
         """
-        asserts.assrt_true(
-            self._port(port_locator).out_waiting(),
-            'Port does not have out-waiting data.')
+        asserts.assert_true(
+            self._port(port_locator).out_waiting,
+            'Port has no out-waiting data.')
 
     def port_should_not_have_unsent_bytes(self, port_locator=None):
         """
         Fails if port output buffer contains data.
         Fails if the port is closed.
         """
-        asserts.assrt_false(
-            self._port(port_locator).out_waiting(),
+        asserts.assert_false(
+            self._port(port_locator).out_waiting,
             'Port has out-waiting data.')
 
     def read_n_bytes(self, size=1, encoding=None, port_locator=None):
@@ -418,6 +447,8 @@ class SerialLibrary:
         until the requested number of bytes is read.
         Returns (encoded) read data.
         """
+        if is_string(size):
+            size = int(size)
         return self._decode(self._port(port_locator).read(size))
 
     def write_data(self, data, encoding=None, port_locator=None):
@@ -561,7 +592,7 @@ class SerialLibrary:
 
         Fails if platforms that does not support the feature.
         """
-        self._port(port_locator).set_input_flow_control(enable)
+        self._port(port_locator).set_input_flow_control(is_truthy(enable))
       
     def set_output_flow_control(self, enable=True, port_locator=None):
         """
@@ -569,7 +600,7 @@ class SerialLibrary:
 
         Fails if the platform that does not support the feature.
         """
-        self._port(port_locator).set_output_flow_control(enable)
+        self._port(port_locator).set_output_flow_control(is_truthy(enable))
 
     def set_rs485_mode(self, status, port_locator=None):
         """
