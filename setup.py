@@ -42,7 +42,7 @@ setup(
     long_description=README,
     author='Yasushi Masuda',
     author_email='whosaysni@gmail.com',
-    url='https://github.com/whosaysni/SerialLibrary',
+    url='https://github.com/whosaysni/robotframework-seriallibrary',
     license='Apache License 2.0',
     keywords='robotframework testing testautomation serial',
     platforms='any',
