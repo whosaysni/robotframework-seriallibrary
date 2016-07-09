@@ -4,7 +4,6 @@ from imp import load_source
 from os.path import abspath, dirname, join
 from sys import platform
 
-requires = {}
 
 try:
     from setuptools import setup
@@ -22,17 +21,16 @@ CURDIR = dirname(abspath(__file__))
 VERSION = load_source(
     'version', 'version',
     open(join(CURDIR, 'src', 'SerialLibrary', 'version.py'))).VERSION
-
-with open(join(CURDIR, 'README.rst')) as readme:
-    README = readme.read()
-
-CLASSIFIERS = """
-Development Status :: 2 - Pre-Alpha
-License :: OSI Approved :: Apache Software License
-Operating System :: OS Independent
-Programming Language :: Python
-Topic :: Software Development :: Testing
-""".strip()
+README = open(join(CURDIR, 'README.rst')).read()
+CLASSIFIERS = '\n'.join(
+    map(' :: '.join, [
+        ('Development Status', '2 - Pre-Alpha'),
+        ('License', 'OSI Approved', 'Apache Software License'),
+        ('Operating System', 'OS Independent'),
+        ('Programming Language', 'Python'),
+        ('Topic', 'Software Development', 'Testing'),
+    ])
+)
 
 
 setup(

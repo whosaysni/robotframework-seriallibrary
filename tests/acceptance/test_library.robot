@@ -175,10 +175,35 @@ Read All Data should read all data arrived to the port
     Should Be Equal As Strings    ${read}    ${bytes}
     [Teardown]    Delete All Ports
 
-Read Until Terminator should read until terminator or size
-    Add Port    loop://    timeout=0.1
-    ${bytes} =    Set Variable    01 23 45 0A 67 89 AB CD EF
+Read Data Should Be should fail if read bytes not equals to specified data.
+    Add Port    loop://
+    ${bytes} =    Set Variable    01 23 45 67 89 AB CD EF
     Write Data    ${bytes}
+    Read Data Should Be    ${bytes}
+    Write Data    FE DC BA
+    Run Keyword And Expect Error    'FE DC BA'(read) != 'AB CD EF'(data)
+    ...    Read Data Should Be    AB CD EF
+    [Teardown]    Delete All Ports
+
+Read All And Log should write log in specified loglevel.
+    Add Port    loop://
+    ${bytes} =    Set Variable    01 23 45 67 89 AB CD EF
+    Write Data    ${bytes}
+    Read All And Log
+    Write Data    ${bytes}
+    Read All And Log    loglevel=info
+    Write Data    ${bytes}
+    Read All And Log    loglevel=debug
+    Write Data    ${bytes}
+    Read All And Log    loglevel=WARN
+    Write Data    ${bytes}
+    Run Keyword And Expect Error    Invalid loglevel.    Read All And Log    loglevel='MYLEVEL'
+    [Teardown]    Delete All Ports
+
+Read Until should read until terminator or size
+    Add Port    loop://    timeout=0.1
+    ${bytes} =    Set Variable    
+    Write Data    01 23 45 0A 67 89 AB CD EF
     ${read} =    Read Until
     Should Be Equal As Strings    ${read}    01 23 45 0A
     ${read} =    Read Until   size=2
@@ -213,6 +238,100 @@ Read N Bytes should read specified number of bytes
     Should Be Equal As Strings    ${read}    AB CD EF
     [Teardown]    Delete All Ports
 
+Flush port should flush i/o (this test just confirm no errors with the keyword).
+    Add Port    loop://    timeout=0.1
+    ${bytes} =    Set Variable    01 23 45 67 89 AB CD EF
+    Write Data    ${bytes}
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    01 23 45 67
+    Flush Port
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    89 AB CD EF
+    [Teardown]    Delete All Ports
+
+Reset Input Buffer clears input buffer.
+    Add Port    loop://    timeout=0.1
+    Write Data    01 23 45 67 89 AB CD EF
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    01 23 45 67
+    Reset Input Buffer
+    Read Data Should Be    ${EMPTY}
+    [Teardown]    Delete All Ports
+
+Reset Output Buffer clears output buffer.
+    Add Port    loop://    timeout=0.1
+    Write Data    01 23 45 67
+    Reset Output Buffer
+    Write Data    89 AB CD EF
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    89 AB CD EF
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    ${EMPTY}
+    [Teardown]    Delete All Ports
+
+Send Break should send break (just comfirms no errors)
+    Add Port    loop://    timeout=0.1
+    Write Data    01 23 45 67
+    Send Break
+    Send Break    0.5
+    ${read} =    Read N Bytes    4
+    Should Be Equal As Strings    ${read}    01 23 45 67
+    [Teardown]    Delete All Ports
+    
+Set/get RTS should set/get RTS status
+    Add Port    loop://    timeout=0.1
+    Set RTS    On
+    RTS Should Be   On
+    CTS Should Be   On
+    Run Keyword And Expect Error   RTS should be Off but On.   RTS Should Be   Off
+    Set RTS    Off
+    RTS Should Be   Off
+    CTS Should Be   Off
+    Run Keyword And Expect Error   RTS should be On but Off.   RTS Should Be   On
+    [Teardown]    Delete All Ports
+    
+Get CTS Status should return CTS status
+    Add Port    loop://    timeout=0.1
+    ${status} =    Get CTS Status
+    Should Be Equal As Strings    ${status}    True
+    [Teardown]    Delete All Ports
+    
+Get DSR Status should return DSR status
+    Add Port    loop://    timeout=0.1
+    ${status} =    Get DSR Status
+    Should Be Equal As Strings    ${status}    True
+    [Teardown]    Delete All Ports
+    
+Get RI Status should return RI status
+    Add Port    loop://    timeout=0.1
+    ${status} =    Get RI Status
+    Should Be Equal As Strings    ${status}    False
+    [Teardown]    Delete All Ports
+    
+Get CD Status should return CD status
+    Add Port    loop://    timeout=0.1
+    ${status} =    Get CD Status
+    Should Be Equal As Strings    ${status}    True
+    [Teardown]    Delete All Ports
+
+Set RS485 Mode should be callable
+    [Setup]  Add Port    loop://    timeout=0.1
+    [Teardown]    Delete All Ports
+    [Template]    Set RS485 Mode
+    On
+    Off
+    Yes
+    No
+    True
+    False
+    1
+    0
+
+Hello serial test
+     Add Port    loop://
+     Write Data    Hello World    encoding=ascii
+     Read Data Should Be    Hello World    encoding=ascii
+
 
 *** Keywords
 
@@ -230,4 +349,9 @@ Get SerialBase Instance
 Should Be Type Of
     [Arguments]    ${object}    ${typestr}
     Should Be Equal    ${object.__class__.__name__}    ${typestr}
+
+Run '${keyword}' If '${attr}' Is Available
+    [Arguments]    @{args}
+    ${instance} =    Get Library Instance    SerialLibrary
+    ${instance.${attr}}
     
