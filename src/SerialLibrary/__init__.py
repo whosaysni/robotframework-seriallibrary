@@ -49,9 +49,8 @@ def to_on_off(value):
 class SerialLibrary:
     """Robot Framework test library for manipulating serial ports
 
-
     Using Library
-    ---------------
+    --------------
 
     Most simple use is to just import library and add port::
 
@@ -60,11 +59,11 @@ class SerialLibrary:
 
         *** test cases ***
         Hello serial test
-             Add Port    loop://
-             Write Data    Hello World    encoding=ascii
-             Read Data Should Be    Hello World    encoding=ascii
+            Add Port    loop://
+            Write Data    Hello World    encoding=ascii
+            Read Data Should Be    Hello World    encoding=ascii
 
-    Or, if you play with only one port and send ascii-only::
+    Or, if you play with only one port and send ascii-only, more simply::
 
         *** settings ***
         Library    SerialLibrary    loop://    encoding=ascii
@@ -74,15 +73,16 @@ class SerialLibrary:
              Write Data    Hello World
              Read Data Should Be    Hello World
 
+
     Default Parameters
-    --------------------
+    -------------------
 
     Default parameter values except timeouts are set as same as SerialBase.
     Default value or timeout and writer_timeout are set to 1.0.
 
 
     Current port and port names
-    -----------------------------
+    ----------------------------
 
     You may have several ports in a library instance simultaneously.
     All ports added to the instance can be identified by its name, which
@@ -101,7 +101,7 @@ class SerialLibrary:
 
 
     Port timeouts
-    ---------------
+    --------------
 
     Default (read/write) timeouts are set to 1.0 while pySerial defaults
     are None (blocking). This is because there is no way to abort blocked

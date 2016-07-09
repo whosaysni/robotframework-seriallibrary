@@ -6,40 +6,40 @@ Named arguments:  supported
 
 Robot Framework test library for manipulating serial ports
 
-
 Using Library
----------------
+--------------
 
 Most simple use is to just import library and add port::
 
-    \*\** settings \*\**
+    *** settings ***
     Library    SerialLibrary
 
-    \*\** test cases \*\**
+    *** test cases ***
     Hello serial test
-         Add Port    loop://
-         Write Data    Hello World    encoding=ascii
-         Read Data Should Be    Hello World    encoding=ascii
+        Add Port    loop://
+        Write Data    Hello World    encoding=ascii
+        Read Data Should Be    Hello World    encoding=ascii
 
-Or, if you play with only one port and send ascii-only::
+Or, if you play with only one port and send ascii-only, more simply::
 
-    \*\** settings \*\**
+    *** settings ***
     Library    SerialLibrary    loop://    encoding=ascii
 
-    \*\** test cases \*\**
+    *** test cases ***
     Hello serial test
          Write Data    Hello World
          Read Data Should Be    Hello World
 
+
 Default Parameters
---------------------
+-------------------
 
 Default parameter values except timeouts are set as same as SerialBase.
 Default value or timeout and writer_timeout are set to 1.0.
 
 
 Current port and port names
------------------------------
+----------------------------
 
 You may have several ports in a library instance simultaneously.
 All ports added to the instance can be identified by its name, which
@@ -58,7 +58,7 @@ recently added port is made current.
 
 
 Port timeouts
----------------
+--------------
 
 Default (read/write) timeouts are set to 1.0 while pySerial defaults
 are None (blocking). This is because there is no way to abort blocked
