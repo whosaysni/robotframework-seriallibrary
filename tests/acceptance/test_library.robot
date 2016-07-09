@@ -331,6 +331,7 @@ Hello serial test
      Add Port    loop://
      Write Data    Hello World    encoding=ascii
      Read Data Should Be    Hello World    encoding=ascii
+    [Teardown]    Delete All Ports
 
 
 *** Keywords
