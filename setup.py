@@ -24,7 +24,7 @@ VERSION = load_source(
 README = open(join(CURDIR, 'README.rst')).read()
 CLASSIFIERS = '\n'.join(
     map(' :: '.join, [
-        ('Development Status', '2 - Pre-Alpha'),
+        ('Development Status', '3 - Alpha'),
         ('License', 'OSI Approved', 'Apache Software License'),
         ('Operating System', 'OS Independent'),
         ('Programming Language', 'Python'),
