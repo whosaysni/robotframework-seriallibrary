@@ -37,13 +37,3 @@ Another Example::
         ${read} =    Read Until
         Should Be Equal As Strings    ${read}    ${EMPTY}
         [Teardown]    Delete All Ports
-
-
-    *** settings ***
-    Library    SerialLibrary    loop://
-
-    *** test cases ***
-    Hello serial test
-         Write Data    01 23 45 67 89 AB CD EF
-         Re
-         Read Data Should Be    Hello World
