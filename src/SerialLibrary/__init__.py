@@ -1,16 +1,25 @@
 import codecs
 import re
 from collections import OrderedDict
+from os import SEEK_CUR
+from sys import platform
+if platform == 'win32':
+    from ntpath import abspath, isabs, join
+else:
+    from os.path import abspath, isabs, join
+
 from serial import Serial, SerialBase, serial_for_url
 from serial.serialutil import LF
 from serial.tools.list_ports import comports, grep
 from serial.tools import hexlify_codec
 
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 from robot.utils import asserts, is_truthy, is_string
 from robot.utils.unic import unic
 
 from version import VERSION as __version__
+
 
 
 # add hexlify to codecs
@@ -717,3 +726,31 @@ class SerialLibrary:
         Fails if the platform that does not support the feature.
         """
         self._port(port_locator).rs485_mode = is_truthy_on_off(status)
+
+    def write_file_data(self, file_or_path, offset=0, length=-1, port_locator=None):
+        """
+        Writes content of file into the port.
+
+        File can be specified by file path or opened file-like object.
+        In former case, path should be absolute or relative to current directory.
+        In latter case, file (or file-like object should support read with
+        specified length.
+        If offset is non-zero, file is seek()-ed from *current position* 
+        (not the beginning of the file). Note that your the file object should
+        support seek() method  with SEEK_CUR.
+        If length is negative, all content after current input file position is read.
+        Otherwise, number of specified bytes are read from the input file.
+
+        Fails if specified file could not be opened.
+        """
+        infile = file_or_path
+        if is_string(file_or_path):
+            infile = open(file_or_path, 'rb')
+        if is_string(offset):
+            offset = int(offset)
+        if is_string(length):
+            length = int(length)
+        if offset > 0:
+            infile.seek(offset, SEEK_CUR)
+        read_bytes = infile.read(length) if length >= 0 else infile.read()
+        self._port(port_locator).write(read_bytes)

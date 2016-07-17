@@ -327,10 +327,23 @@ Set RS485 Mode should be callable
     1
     0
 
+Write File Data should write content of specified file
+    [Tags]    ASDF
+    Add Port    loop://
+    Write File Data    ${CURDIR}/demo.dat
+    ${read} =   Read N Bytes   10
+    Should Be Equal As Strings    ${read}   00 01 02 03 04 05 06 07 08 09
+    Reset Input Buffer
+    Write File Data    ${CURDIR}/demo.dat   offset=10   length=10
+    ${read} =   Read N Bytes   10
+    Should Be Equal As Strings    ${read}   0A 0B 0C 0D 0E 0F 10 11 12 13
+    [Teardown]    Delete All Ports
+     
+
 Hello serial test
-     Add Port    loop://
-     Write Data    Hello World    encoding=ascii
-     Read Data Should Be    Hello World    encoding=ascii
+    Add Port    loop://
+    Write Data    Hello World    encoding=ascii
+    Read Data Should Be    Hello World    encoding=ascii
     [Teardown]    Delete All Ports
 
 
@@ -350,9 +363,3 @@ Get SerialBase Instance
 Should Be Type Of
     [Arguments]    ${object}    ${typestr}
     Should Be Equal    ${object.__class__.__name__}    ${typestr}
-
-Run '${keyword}' If '${attr}' Is Available
-    [Arguments]    @{args}
-    ${instance} =    Get Library Instance    SerialLibrary
-    ${instance.${attr}}
-    
