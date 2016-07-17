@@ -328,7 +328,6 @@ Set RS485 Mode should be callable
     0
 
 Write File Data should write content of specified file
-    [Tags]    ASDF
     Add Port    loop://
     Write File Data    ${CURDIR}/demo.dat
     ${read} =   Read N Bytes   10
