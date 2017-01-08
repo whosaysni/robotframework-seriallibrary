@@ -7,11 +7,11 @@ Library    SerialLibrary
 Default port is None
     ${ins} =    Get Library Instance    SerialLibrary
     Should Be Equal    ${ins._current_port_locator}   ${NONE}
-    
+
 Default encoding is hexlify
     ${ins} =    Get Library Instance    SerialLibrary
     Should Be Equal    ${ins._encoding}   hexlify
-    
+
 Default parameters are set as same as a vanilla SerialBase instance
     [Template]    Parameter Matches to SerialBase attributes
     baudrate
@@ -117,7 +117,7 @@ Delete Port deletes specified port (or current port)
     Should Be Equal    ${ins._current_port_locator}   loop://
     Delete Port
     Should Be Equal    ${ins._current_port_locator}   ${NONE}
-    
+
 Delete All Ports deletes all ports added so far
     ${ins} =    Get Library Instance    SerialLibrary
     Add Port   loop://
@@ -131,7 +131,7 @@ Open Port should open closed port
     ${ins} =    Get Library Instance    SerialLibrary
     Add Port    loop://    open=False
     Should Not Be True    ${ins._ports['loop://'].is_open}
-    Open Port    
+    Open Port
     Should Be True    ${ins._ports['loop://'].is_open}
     [Teardown]    Delete All Ports
 
@@ -140,12 +140,12 @@ Port Should Be Open/Closed should pass/fail depending on port status
     Add Port    loop://    open=False
     Run Keyword And Expect Error    Port is closed.    Port Should Be Open
     Port Should Be Closed
-    Open Port    
+    Open Port
     Run Keyword And Expect Error    Port is open.    Port Should Be Closed
     Port Should Be Open
     [Teardown]    Delete All Ports
 
-Switch Port should switch port    
+Switch Port should switch port
     ${ins} =    Get Library Instance    SerialLibrary
     Add Port    loop://
     Add Port    loop://debug    make_current=True
@@ -202,7 +202,7 @@ Read All And Log should write log in specified loglevel.
 
 Read Until should read until terminator or size
     Add Port    loop://    timeout=0.1
-    ${bytes} =    Set Variable    
+    ${bytes} =    Set Variable
     Write Data    01 23 45 0A 67 89 AB CD EF
     ${read} =    Read Until
     Should Be Equal As Strings    ${read}    01 23 45 0A
@@ -277,7 +277,7 @@ Send Break should send break (just comfirms no errors)
     ${read} =    Read N Bytes    4
     Should Be Equal As Strings    ${read}    01 23 45 67
     [Teardown]    Delete All Ports
-    
+
 Set/get RTS should set/get RTS status
     Add Port    loop://    timeout=0.1
     Set RTS    On
@@ -289,43 +289,54 @@ Set/get RTS should set/get RTS status
     CTS Should Be   Off
     Run Keyword And Expect Error   RTS should be On but Off.   RTS Should Be   On
     [Teardown]    Delete All Ports
-    
+
 Get CTS Status should return CTS status
     Add Port    loop://    timeout=0.1
     ${status} =    Get CTS Status
     Should Be Equal As Strings    ${status}    True
     [Teardown]    Delete All Ports
-    
+
 Get DSR Status should return DSR status
     Add Port    loop://    timeout=0.1
     ${status} =    Get DSR Status
     Should Be Equal As Strings    ${status}    True
     [Teardown]    Delete All Ports
-    
+
 Get RI Status should return RI status
     Add Port    loop://    timeout=0.1
     ${status} =    Get RI Status
     Should Be Equal As Strings    ${status}    False
     [Teardown]    Delete All Ports
-    
+
 Get CD Status should return CD status
     Add Port    loop://    timeout=0.1
     ${status} =    Get CD Status
     Should Be Equal As Strings    ${status}    True
     [Teardown]    Delete All Ports
 
-Set RS485 Mode should be callable
+Set RS485 Mode without parameters should disable rs485 mode
+    [Setup]  Add Port    loop://    timeout=0.1
+    [Teardown]    Delete All Ports
+    ${ins} =    Get Library Instance    SerialLibrary
+    Set RS485 Mode
+    Should Be Equal    ${ins._ports['loop://'].rs485_mode}    ${None}
+
+Set RS485 Mode should accept rs485 mode parameters
     [Setup]  Add Port    loop://    timeout=0.1
     [Teardown]    Delete All Ports
     [Template]    Set RS485 Mode
-    On
-    Off
-    Yes
-    No
-    True
-    False
-    1
-    0
+    rts_level_for_tx=True
+    rts_level_for_tx=False
+    rts_level_for_rx=True
+    rts_level_for_rx=False
+    loopback=True
+    loopback=False
+    delay_before_tx=None
+    delay_before_tx=1.0
+    delay_before_rx=None
+    delay_before_rx=1.0
+    delay_before_rx=-1
+    
 
 Write File Data should write content of specified file
     Add Port    loop://
@@ -337,7 +348,7 @@ Write File Data should write content of specified file
     ${read} =   Read N Bytes   10
     Should Be Equal As Strings    ${read}   0A 0B 0C 0D 0E 0F 10 11 12 13
     [Teardown]    Delete All Ports
-     
+
 
 Hello serial test
     Add Port    loop://

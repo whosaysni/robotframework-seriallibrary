@@ -3,25 +3,28 @@ import re
 from collections import OrderedDict
 from os import SEEK_CUR
 from sys import platform
-if platform == 'win32':
-    from ntpath import abspath, isabs, join
-else:
-    from os.path import abspath, isabs, join
 
 from serial import Serial, SerialBase, serial_for_url
+from serial.rs485 import RS485Settings
 from serial.serialutil import LF
 from serial.tools.list_ports import comports, grep
 from serial.tools import hexlify_codec
 
 from robot.api import logger
-from robot.libraries.BuiltIn import BuiltIn
 from robot.utils import asserts, is_truthy, is_string
 from robot.utils.unic import unic
 
-from version import VERSION as __version__
+from .version import VERSION as __version__
 
+if platform == 'win32':
+    import ntpath as ospath
+else:
+    import os.path as ospath
+abspath = ospath.abspath
+isabs = ospath.isabs
+join = ospath.join
 
-
+    
 # add hexlify to codecs
 def hexlify_decode_plus(data, errors='strict'):
     udata, length = hexlify_codec.hex_decode(data, errors)
@@ -719,13 +722,28 @@ class SerialLibrary:
         """
         self._port(port_locator).set_output_flow_control(is_truthy_on_off(enable))
 
-    def set_rs485_mode(self, status, port_locator=None):
+    def set_rs485_mode(self, port_locator=None, **kwargs):
         """
         Sets RS485 mode on the port.
 
+        If free keyword arguments contains any RS485 setting parameter key,
+        RS485 mode is enabled. Otherwiese, rs485 mode is disabled.
+        Supported parameter keys are:
+        - rts_level_for_tx (default: True)
+        - rts_level_for_rx (default: False)
+        - loopback (default: False)
+        - delay_before_tx (default: None)
+        - delay_before_rx (default: None)
         Fails if the platform that does not support the feature.
         """
-        self._port(port_locator).rs485_mode = is_truthy_on_off(status)
+        defaults = dict(
+            rts_level_for_tx=True, rts_level_for_rx=False,
+            loopback=False, delay_before_tx=None, delay_before_rx=None)
+        settings_kvs = dict((k, v) for k, v in kwargs.items() if k in defaults)
+        rs485_settings = None
+        if settings_kvs:
+            rs485_settings = RS485Settings(**dict(defaults, **settings_kvs))
+        self._port(port_locator).rs485_mode = rs485_settings
 
     def write_file_data(self, file_or_path, offset=0, length=-1, port_locator=None):
         """
