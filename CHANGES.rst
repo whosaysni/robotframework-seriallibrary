@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+0.2.4
+-------
+
+Fixed typo in doc/docstring. (Thansks @gerryqd)
+
 0.2.3
 ------
 
