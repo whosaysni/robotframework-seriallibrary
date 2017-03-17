@@ -269,7 +269,7 @@ Returned list consists of possible ListPortInfo instances.
 You may access attributes of ListPortInfo by extended variable
 syntax, e.g.::
 
-    @{ports} =   List Ports
+    @{ports} =   List Com Ports
     Log  ${ports[0].device}
 
 Open Port
