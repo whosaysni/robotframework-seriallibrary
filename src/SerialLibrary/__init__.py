@@ -218,7 +218,7 @@ class SerialLibrary:
         You may access attributes of ListPortInfo by extended variable
         syntax, e.g.::
 
-            @{ports} =   List Ports
+            @{ports} =   List Com Ports
             Log  ${ports[0].device}
         """
         return comports()
