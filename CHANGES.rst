@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+0.3.1
+-------
+
+Added Python 3.5+ supprt.
+
+0.2.4
+-------
+
+Fixed typo in doc/docstring. (Thanks @gerryqd)
+
 0.2.3
 ------
 
