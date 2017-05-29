@@ -1,3 +1,5 @@
+# coding: utf-8
+from __future__ import unicode_literals
 import codecs
 import re
 from collections import OrderedDict
@@ -23,6 +25,10 @@ else:
 abspath = ospath.abspath
 isabs = ospath.isabs
 join = ospath.join
+
+
+# unicode type hack
+unicode_ = type('')
 
     
 # add hexlify to codecs
@@ -583,9 +589,9 @@ class SerialLibrary:
         encoded with given encoding before writing. Otherwise,
         data is converted to unicode and processed same as unicode string.
         """
-        if not isinstance(data, (unicode, bytes)):
+        if not isinstance(data, unicode_):
             data = unic(data)
-        if isinstance(data, unicode):
+        if isinstance(data, unicode_):
             data = self._encode(data, encoding)
         self._port(port_locator).write(data)
 
