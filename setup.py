@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from imp import load_source
 from os.path import abspath, dirname, join
 from sys import platform
 
@@ -18,9 +17,11 @@ if platform.startswith('java'):
 
 
 CURDIR = dirname(abspath(__file__))
-VERSION = load_source(
-    'version', 'version',
-    open(join(CURDIR, 'src', 'SerialLibrary', 'version.py'))).VERSION
+
+with open(join(CURDIR, 'src', 'SerialLibrary', 'version.py')) as f:
+    exec(f.read())
+    VERSION = get_version()
+
 README = open(join(CURDIR, 'README.rst')).read()
 CLASSIFIERS = '\n'.join(
     map(' :: '.join, [
