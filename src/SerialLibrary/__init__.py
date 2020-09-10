@@ -30,7 +30,7 @@ join = ospath.join
 # unicode type hack
 unicode_ = type('')
 
-    
+
 # add hexlify to codecs
 def hexlify_decode_plus(data, errors='strict'):
     udata, length = hexlify_codec.hex_decode(data, errors)
@@ -524,6 +524,9 @@ class SerialLibrary:
         """
         if size is not None:
             size = float(size)
+        print(terminator, terminator.__class__.__name__)
+        if isinstance(terminator, (bytes, bytearray)):
+            raise TypeError("Terminator type: {}".format(terminator.__class__.__name__))
         if terminator != LF:
             terminator = self._encode(terminator)
         return self._decode(
@@ -759,7 +762,7 @@ class SerialLibrary:
         In former case, path should be absolute or relative to current directory.
         In latter case, file (or file-like object should support read with
         specified length.
-        If offset is non-zero, file is seek()-ed from *current position* 
+        If offset is non-zero, file is seek()-ed from *current position*
         (not the beginning of the file). Note that your the file object should
         support seek() method  with SEEK_CUR.
         If length is negative, all content after current input file position is read.
