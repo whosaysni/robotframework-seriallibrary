@@ -173,7 +173,10 @@ class SerialLibrary:
 
         If encoding is not specified, instance's default encoding will be used.
         """
-        return ustring.encode(encoding or self._encoding, encoding_mode)
+        if isinstance(ustring, bytes):
+            return ustring
+        else:
+            return ustring.encode(encoding or self._encoding, encoding_mode)
 
     def _decode(self, bstring, encoding=None, encoding_mode='replace'):
         """
@@ -527,7 +530,7 @@ class SerialLibrary:
         if terminator != LF:
             terminator = self._encode(terminator)
         return self._decode(
-            self._port(port_locator).read_until(terminator=terminator, size=size),
+            self._port(port_locator).read_until(expected=terminator, size=size),
             encoding)
 
     def port_should_have_unread_bytes(self, port_locator=None):
