@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "robotframework-seriallibrary"
-version = "0.4.0"
+version = "0.4.1"
 description = "Robot Framework test library for serial connection"
 readme = "README.rst"
 license = "Apache License 2.0"
