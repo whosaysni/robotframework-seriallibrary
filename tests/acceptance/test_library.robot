@@ -202,7 +202,6 @@ Read All And Log should write log in specified loglevel.
 
 Read Until should read until terminator or size
     Add Port    loop://    timeout=0.1
-    ${bytes} =    Set Variable
     Write Data    01 23 45 0A 67 89 AB CD EF
     ${read} =    Read Until
     Should Be Equal As Strings    ${read}    01 23 45 0A
@@ -214,6 +213,13 @@ Read Until should read until terminator or size
     Should Be Equal As Strings    ${read}    EF
     ${read} =    Read Until
     Should Be Equal As Strings    ${read}    ${EMPTY}
+    [Teardown]    Delete All Ports
+
+Read Until should work with string terinators
+    Add Port    loop://    timeout=0.1
+    Write Data    blahblahfooblah    encoding=ascii
+    ${read} =    Read Until   terminator=foo  terminator_encoding=ascii  encoding=ascii
+    Should Be Equal As Strings    ${read}    blahblahfoo
     [Teardown]    Delete All Ports
 
 Port Should (Not) Have Unread Bytes passes/failes according to the in_waiting status
@@ -349,13 +355,23 @@ Write File Data should write content of specified file
     Should Be Equal As Strings    ${read}   0A 0B 0C 0D 0E 0F 10 11 12 13
     [Teardown]    Delete All Ports
 
-
 Hello serial test
     Add Port    loop://
     Write Data    Hello World    encoding=ascii
     Read Data Should Be    Hello World    encoding=ascii
     [Teardown]    Delete All Ports
 
+Hello serial test in unicode
+    Add Port    loop://
+    Write Data    こんにちは世界    encoding=utf-8
+    Read Data Should Be    こんにちは世界    encoding=utf-8
+    Write Data    안녕하세요 세계    encoding=utf-8
+    Read Data Should Be    안녕하세요 세계    encoding=utf-8
+    Write Data    नमस्कार जगत्    encoding=utf-8
+    Read Data Should Be   नमस्कार जगत्    encoding=utf-8
+    Write Data    Привет, мир    encoding=utf-8
+    Read Data Should Be    Привет, мир   encoding=utf-8
+    [Teardown]    Delete All Ports
 
 *** Keywords
 

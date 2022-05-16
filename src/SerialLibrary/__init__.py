@@ -516,7 +516,7 @@ class SerialLibrary:
             msg = "'%s'(read) != '%s'(data)" % (hex_bread, hex_bdata)
             asserts.fail(msg)
 
-    def read_until(self, expected=LF, size=None, encoding=None, port_locator=None, **kw):
+    def read_until(self, expected=None, size=None, encoding=None, port_locator=None, terminator_encoding=None, **kw):
         """
         Read until a termination sequence is found, size exceeded or timeout.
 
@@ -525,12 +525,11 @@ class SerialLibrary:
         character 'X' as terminator and encoding=hexlify (default), you should
         call this keyword as Read Until terminator=58.
         """
-        terminator = kw.get('terminator', expected)
+        terminator = kw.get('terminator', expected) or LF
+        if not isinstance(terminator, bytes):
+            terminator = self._encode(terminator, encoding=terminator_encoding)
         if size is not None:
             size = float(size)
-        if terminator != LF:
-            if isinstance(terminator, str):
-                terminator = self._encode(terminator, encoding=encoding)
         buf = self._port(port_locator).read_until(expected=terminator, size=size)
         return self._decode(buf, encoding=encoding)
 
