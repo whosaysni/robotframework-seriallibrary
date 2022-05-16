@@ -342,7 +342,6 @@ Set RS485 Mode should accept rs485 mode parameters
     delay_before_rx=None
     delay_before_rx=1.0
     delay_before_rx=-1
-    
 
 Write File Data should write content of specified file
     Add Port    loop://
@@ -353,6 +352,17 @@ Write File Data should write content of specified file
     Write File Data    ${CURDIR}/demo.dat   offset=10   length=10
     ${read} =   Read N Bytes   10
     Should Be Equal As Strings    ${read}   0A 0B 0C 0D 0E 0F 10 11 12 13
+    [Teardown]    Delete All Ports
+
+Deleting one of multiple opened port should success
+    ${primary_port} =  Set Variable  loop://
+    ${secondary_port} =  Set Variable  loop://debug
+    Add Port   ${primary_port}
+    Write Data   Hello Primary Port  encoding=ascii
+    Add Port   ${secondary_port}
+    Switch Port  ${secondary_port}
+    Write Data   Hello Sencondary Port  encoding=ascii
+    Delete Port    ${secondary_port}
     [Teardown]    Delete All Ports
 
 Hello serial test

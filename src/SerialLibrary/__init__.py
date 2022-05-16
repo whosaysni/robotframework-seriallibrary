@@ -370,7 +370,7 @@ class SerialLibrary:
         if port_locator == self._current_port_locator:
             self._current_port_locator = None
             if self._ports.keys():
-                self._current_port_locator = self._ports.keys()[-1]
+                self._current_port_locator = list(self._ports.keys())[-1]
         del port
 
     def delete_all_ports(self):
