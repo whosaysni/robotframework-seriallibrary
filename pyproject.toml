@@ -1,0 +1,29 @@
+[build-system]
+requires = ["poetry-core >= 1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "robotframework-seriallibrary"
+version = "0.4.0"
+description = "Robot Framework test library for serial connection"
+readme = "README.rst"
+license = "Apache License 2.0"
+authors = ["Yasushi Masuda <whosaysni@gmail.com>"]
+homepage = "https://github.com/whosaysni/robotframework-seriallibrary/"
+repository = "https://github.com/whosaysni/robotframework-seriallibrary/"
+keywords = ["robotframework", "testing", "testautomation", "serial"]
+classifiers = [
+    'Development Status', '3 - Alpha',
+    'License', 'OSI Approved', 'Apache Software License',
+    'Operating System', 'OS Independent',
+    'Programming Language', 'Python', '3.8',
+    'Topic', 'Software Development', 'Testing',
+]
+packages = [
+    { include = 'src/SerialLibrary' }
+]
+[tool.poetry.dependencies]
+install_requires=['robotframework']
+
+
+
