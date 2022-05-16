@@ -1,6 +1,27 @@
 Release Notes
 =============
 
+0.4.2
+-------
+
+* Fixed #7: port dictionary keys() no longer subscriptable on Python3.
+
+
+0.4.1
+-------
+
+* Fixed encoding issue. (Thanks @schoener-one, @JasperCraeghs).
+* Fixed "Read Until" keyword does not work with multichar terminator.
+* Fixed bug introduced by Pyserial3.5+ parameter change (terminator->expected).
+
+
+0.4.0
+-------
+
+Build using poetry.
+Dropped Python2 support.
+
+
 0.3.1
 -------
 
