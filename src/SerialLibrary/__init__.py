@@ -14,9 +14,9 @@ from serial.tools import hexlify_codec
 
 from robot.api import logger
 from robot.utils import asserts, is_truthy, is_string
-from robot.utils.unic import unic
 
-from .version import VERSION as __version__
+
+__version__ = (0, 4, 0)
 
 if platform == 'win32':
     import ntpath as ospath
@@ -30,7 +30,6 @@ join = ospath.join
 # unicode type hack
 unicode_ = type('')
 
-    
 # add hexlify to codecs
 def hexlify_decode_plus(data, errors='strict'):
     udata, length = hexlify_codec.hex_decode(data, errors)
@@ -167,19 +166,23 @@ class SerialLibrary:
             self.add_port(port_locator)
             self._current_port_str = port_locator
 
-    def _encode(self, ustring, encoding=None, encoding_mode='strict'):
+    def _encode(self, ustring, encoding=None, encoding_mode=None):
         """
         Encode (unicode) string into raw bytes.
 
         If encoding is not specified, instance's default encoding will be used.
         """
-        return ustring.encode(encoding or self._encoding, encoding_mode)
+        encoding_mode = encoding_mode or 'strict'
+        encoding = encoding or self._encoding or 'hexlify'
+        return ustring.encode(encoding, encoding_mode)
 
-    def _decode(self, bstring, encoding=None, encoding_mode='replace'):
+    def _decode(self, bstring, encoding=None, encoding_mode=None):
         """
         Decode raw bytes to (unicode) string.
         """
-        return bstring.decode(encoding or self._encoding, encoding_mode)
+        encoding_mode = encoding_mode or 'replace'
+        encoding = encoding or self._encoding or 'hexlify'
+        return bstring.decode(encoding, encoding_mode)
 
     def _port(self, port_locator=None, fail=True):
         """
@@ -505,15 +508,15 @@ class SerialLibrary:
         This keyword compares values in byte space; data is encoded to bytes
         then compared to bytes read from the port.
         """
-        bdata = self._encode(data, encoding)
+        bdata = self._encode(data, encoding=encoding)
         bread = self._port(port_locator).read_all()
         if bread != bdata:
-            hex_bread = self._decode(bread, 'hexlify')
-            hex_bdata = self._decode(bdata, 'hexlify')
+            hex_bread = self._decode(bread, encoding='hexlify')
+            hex_bdata = self._decode(bdata, encoding='hexlify')
             msg = "'%s'(read) != '%s'(data)" % (hex_bread, hex_bdata)
             asserts.fail(msg)
 
-    def read_until(self, terminator=LF, size=None, encoding=None, port_locator=None):
+    def read_until(self, expected=LF, size=None, encoding=None, port_locator=None, **kw):
         """
         Read until a termination sequence is found, size exceeded or timeout.
 
@@ -522,13 +525,14 @@ class SerialLibrary:
         character 'X' as terminator and encoding=hexlify (default), you should
         call this keyword as Read Until terminator=58.
         """
+        terminator = kw.get('terminator', expected)
         if size is not None:
             size = float(size)
         if terminator != LF:
-            terminator = self._encode(terminator)
-        return self._decode(
-            self._port(port_locator).read_until(terminator=terminator, size=size),
-            encoding)
+            if isinstance(terminator, str):
+                terminator = self._encode(terminator, encoding=encoding)
+        buf = self._port(port_locator).read_until(expected=terminator, size=size)
+        return self._decode(buf, encoding=encoding)
 
     def port_should_have_unread_bytes(self, port_locator=None):
         """
@@ -568,7 +572,7 @@ class SerialLibrary:
             self._port(port_locator).out_waiting,
             'Port has out-waiting data.')
 
-    def read_n_bytes(self, size=1, encoding=None, port_locator=None):
+    def read_n_bytes(self, size=1, encoding=None, encoding_mode=None, port_locator=None):
         """
         Reads specified number of bytes from the port.
 
@@ -578,9 +582,10 @@ class SerialLibrary:
         """
         if is_string(size):
             size = int(size)
-        return self._decode(self._port(port_locator).read(size))
+        buf = self._port(port_locator).read(size)
+        return self._decode(buf, encoding=encoding, encoding_mode=encoding_mode)
 
-    def write_data(self, data, encoding=None, port_locator=None):
+    def write_data(self, data, encoding=None, encoding_mode=None, port_locator=None):
         """
         Writes data into the port.
 
@@ -589,10 +594,8 @@ class SerialLibrary:
         encoded with given encoding before writing. Otherwise,
         data is converted to unicode and processed same as unicode string.
         """
-        if not isinstance(data, unicode_):
-            data = unic(data)
-        if isinstance(data, unicode_):
-            data = self._encode(data, encoding)
+        if isinstance(data, str):
+            data = self._encode(data, encoding=encoding, encoding_mode=encoding_mode)
         self._port(port_locator).write(data)
 
     def flush_port(self, port_locator=None):
@@ -752,29 +755,22 @@ class SerialLibrary:
         self._port(port_locator).rs485_mode = rs485_settings
 
     def write_file_data(self, file_or_path, offset=0, length=-1, port_locator=None):
-        """
-        Writes content of file into the port.
+        """Write file content into port
 
-        File can be specified by file path or opened file-like object.
-        In former case, path should be absolute or relative to current directory.
-        In latter case, file (or file-like object should support read with
-        specified length.
-        If offset is non-zero, file is seek()-ed from *current position* 
+        File can be specified by file path or opened byte stream.
+        File path should be either absolute or relative to current directory.
+        Byte stream should support read() with specified length.
+        If non-zero offset is given, file is seek()-ed from *current position* 
         (not the beginning of the file). Note that your the file object should
-        support seek() method  with SEEK_CUR.
+        support seek(n, SEEK_CUR).
         If length is negative, all content after current input file position is read.
         Otherwise, number of specified bytes are read from the input file.
 
         Fails if specified file could not be opened.
         """
-        infile = file_or_path
-        if is_string(file_or_path):
-            infile = open(file_or_path, 'rb')
-        if is_string(offset):
-            offset = int(offset)
-        if is_string(length):
-            length = int(length)
+        stream = open(file_or_path, 'rb') if is_string(file_or_path) else file_or_path
+        offset, length = int(offset), int(length)
         if offset > 0:
-            infile.seek(offset, SEEK_CUR)
-        read_bytes = infile.read(length) if length >= 0 else infile.read()
+            stream.seek(offset, SEEK_CUR)
+        read_bytes = stream.read(length) if length >= 0 else stream.read()
         self._port(port_locator).write(read_bytes)
