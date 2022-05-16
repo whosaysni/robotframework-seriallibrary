@@ -13,17 +13,18 @@ homepage = "https://github.com/whosaysni/robotframework-seriallibrary/"
 repository = "https://github.com/whosaysni/robotframework-seriallibrary/"
 keywords = ["robotframework", "testing", "testautomation", "serial"]
 classifiers = [
-    'Development Status', '3 - Alpha',
-    'License', 'OSI Approved', 'Apache Software License',
-    'Operating System', 'OS Independent',
-    'Programming Language', 'Python', '3.8',
-    'Topic', 'Software Development', 'Testing',
+    "Development Status", "3 - Alpha",
+    "License", "OSI Approved", "Apache Software License",
+    "Operating System", "OS Independent",
+    "Programming Language", "Python", "3.8",
+    "Topic", "Software Development", "Testing",
 ]
 packages = [
-    { include = 'src/SerialLibrary' }
-]
+  { include="SerialLibrary", from="src" }
+  ]
+
 [tool.poetry.dependencies]
-install_requires=['robotframework']
+install_requires=["robotframework", "pyserial"]
 
 
 
