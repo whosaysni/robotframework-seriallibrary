@@ -18,13 +18,15 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.8",
     "Topic :: Software Development :: Testing",
+    "Framework :: Robot Framework",
+    "Framework :: Robot Framework :: Library",
 ]
 packages = [
   { include="SerialLibrary", from="src" }
-  ]
+]
+include = ["LICENSE"]
 
 [tool.poetry.dependencies]
-install_requires=["robotframework", "pyserial"]
-
-
-
+pyserial = "*"
+python = ">=3.8"
+robotframework = "*"
