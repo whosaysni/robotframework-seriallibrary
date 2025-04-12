@@ -24,7 +24,5 @@ packages = [
   ]
 
 [tool.poetry.dependencies]
-install_requires=["robotframework", "pyserial"]
-
-
-
+robotframework = ">=4.0"
+pyserial = ">=3.0"
