@@ -1,4 +1,1 @@
-VERSION = (0, 4, 0)
-
-def get_version():
-    return VERSION;
+__version__ = "1.0.0"

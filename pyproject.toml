@@ -1,30 +1,69 @@
 [build-system]
-requires = ["poetry-core >= 1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling >= 1.24"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "robotframework-seriallibrary"
-version = "0.4.2"
-description = "Robot Framework test library for serial connection"
+dynamic = ["version"]
+description = "Robot Framework test library for serial connections"
 readme = "README.rst"
-license = "Apache License 2.0"
-authors = ["Yasushi Masuda <whosaysni@gmail.com>"]
-homepage = "https://github.com/whosaysni/robotframework-seriallibrary/"
-repository = "https://github.com/whosaysni/robotframework-seriallibrary/"
-keywords = ["robotframework", "testing", "testautomation", "serial"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.8",
-    "Topic :: Software Development :: Testing",
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Yasushi Masuda", email = "whosaysni@gmail.com" }]
+maintainers = [{ name = "Florian Morineau", email = "florian.morineau@gmail.com" }]
+keywords = ["robotframework", "testing", "testautomation", "serial", "pyserial"]
+requires-python = ">=3.10"
+dependencies = [
+    "robotframework >= 7.0, < 8.0",
+    "pyserial >= 3.5",
 ]
-packages = [
-  { include="SerialLibrary", from="src" }
-  ]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Robot Framework",
+    "Framework :: Robot Framework :: Library",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Communications",
+]
 
-[tool.poetry.dependencies]
-install_requires=["robotframework", "pyserial"]
+[project.optional-dependencies]
+dev = ["pytest >= 8", "robotframework-robocop >= 6", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/whosaysni/robotframework-seriallibrary"
+Documentation = "https://whosaysni.github.io/robotframework-seriallibrary/"
+Source = "https://github.com/whosaysni/robotframework-seriallibrary"
+Issues = "https://github.com/whosaysni/robotframework-seriallibrary/issues"
+Changelog = "https://github.com/whosaysni/robotframework-seriallibrary/blob/develop/CHANGES.rst"
+
+[tool.hatch.version]
+path = "src/SerialLibrary/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/SerialLibrary"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
 
 
+[tool.robocop]
+# The 0.4.x suite is kept verbatim to check backward compatibility.
+exclude = ["tests/acceptance/legacy"]
 
+[tool.robocop.lint]
+ignore = ["missing-doc-test-case", "missing-doc-keyword", "missing-doc-suite"]

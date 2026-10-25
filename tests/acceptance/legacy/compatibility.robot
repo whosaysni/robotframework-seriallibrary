@@ -1,8 +1,9 @@
-*** Settings
+*** Settings ***
+Documentation    Original 0.4.x test suite, kept to guarantee backward compatibility.
 Library    Collections
 Library    SerialLibrary
 
-*** Test Cases
+*** Test Cases ***
 
 Default port is None
     ${ins} =    Get Library Instance    SerialLibrary
@@ -345,11 +346,11 @@ Set RS485 Mode should accept rs485 mode parameters
 
 Write File Data should write content of specified file
     Add Port    loop://
-    Write File Data    ${CURDIR}/demo.dat
+    Write File Data    ${CURDIR}/../demo.dat
     ${read} =   Read N Bytes   10
     Should Be Equal As Strings    ${read}   00 01 02 03 04 05 06 07 08 09
     Reset Input Buffer
-    Write File Data    ${CURDIR}/demo.dat   offset=10   length=10
+    Write File Data    ${CURDIR}/../demo.dat   offset=10   length=10
     ${read} =   Read N Bytes   10
     Should Be Equal As Strings    ${read}   0A 0B 0C 0D 0E 0F 10 11 12 13
     [Teardown]    Delete All Ports
@@ -383,7 +384,7 @@ Hello serial test in unicode
     Read Data Should Be    Привет, мир   encoding=utf-8
     [Teardown]    Delete All Ports
 
-*** Keywords
+*** Keywords ***
 
 Parameter Matches to SerialBase attributes
     [Arguments]    ${key}
@@ -394,7 +395,7 @@ Parameter Matches to SerialBase attributes
 Get SerialBase Instance
     ${ins} =    Evaluate
     ...    __import__('serial').SerialBase(timeout=1.0, write_timeout=1.0, inter_byte_timeout=0.0)
-    [Return]        ${ins}
+    RETURN    ${ins}
 
 Should Be Type Of
     [Arguments]    ${object}    ${typestr}

@@ -1,0 +1,69 @@
+name: Tests
+
+on:
+  push:
+    branches: ["**"]  # tags are tested by the release workflow
+  pull_request:
+  workflow_call:
+  schedule:
+    # Weekly, to catch breakage from new Robot Framework or pySerial releases.
+    - cron: "0 6 * * 1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        robotframework: ["7.0", "7.*"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e .[dev] "robotframework==${{ matrix.robotframework }}"
+      - run: ruff check src tests tools
+      - run: ruff format --check src tests tools
+      - run: robocop check tests
+      - run: robocop format --check tests
+      - run: pytest
+      - run: robot --outputdir results tests/acceptance
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: results-py${{ matrix.python }}-rf${{ matrix.robotframework }}
+          path: results
+
+  docs:
+    name: Keyword documentation is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: pip install -e . "robotframework==$(python tools/libdoc.py --rf-version)"
+      - run: python tools/libdoc.py --check
+
+  robotframework-pre-release:
+    # Early warning for the next Robot Framework release, including the next
+    # major one that the `robotframework < 8.0` requirement does not allow yet.
+    name: Robot Framework pre-release
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: pip install --pre robotframework "pyserial >= 3.5" pytest
+      - run: pip install --no-deps -e .
+      - run: python -c "import robot; print('Robot Framework', robot.__version__)"
+      - run: pytest
+      - run: robot --outputdir results tests/acceptance
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: results-rf-pre-release
+          path: results
